@@ -27,6 +27,173 @@
 */
 #ifndef _CLASS_READER_
 ///
+/// \class VOperator
+///
+/// Operations applyed to a vector
+/// Applique l'opération norme 2 fois sqrt(Cte) sur 1, 2 ou 3 composantes sélectionnées à
+/// la création de l'objet par I0, I1 et I2 d'un vecteur pouvant comporter plus de 3 composantes
+/// \todo Des optimisations peuvent être faites ici
+///
+template<typename Basic_type, typename Index_type>
+class VOp_norm2
+{
+  public:
+    ///
+    /// \brief Constructeur par défaut (I0=0, size=1), sous vecteur de dimension 1 : scalaire
+    ///
+    VOp_norm2(Index_type I0, Basic_type Cte);
+    
+    ///
+    /// \brief Constructeur pour un sous vecteur de dimension 2
+    ///
+    VOp_norm2(Index_type I0, Index_type I1, Basic_type Cte);
+    
+    ///
+    /// \brief Constructeur pour un sous vecteur de dimension 3
+    ///
+    VOp_norm2(Index_type I0, Index_type I1, Index_type I2, Basic_type Cte);
+    virtual ~VOp_norm2();
+    
+    ///
+    /// \brief Renvoie la norme 2 du sous vecteur maximal (I0, I1, I2) de dimension size du
+    /// vecteur passé par itérateur
+    ///
+    template<class InputIterator>
+   Basic_type operator()(InputIterator first, InputIterator last);
+  private:
+    Index_type i0, i1, i2;
+    Basic_type cte;
+    unsigned int size;
+};
+
+//
+// Constructeur par defaut
+//
+template<typename Basic_type, typename Index_type>
+VOp_norm2<Basic_type, Index_type>::VOp_norm2(Index_type I0 = static_cast<Index_type>(0), Basic_type Cte = static_cast<Basic_type>(0)):
+i0(I0), i1(static_cast<Index_type>(0)), i2(static_cast<Index_type>(0)), cte(Cte), size(1)
+{  }
+
+template<typename Basic_type, typename Index_type>
+VOp_norm2<Basic_type, Index_type>::VOp_norm2(Index_type I0, Index_type I1, Basic_type Cte):
+i0(I0), i1(I1), i2(static_cast<Index_type>(0)), cte(Cte), size(2)
+{  }
+
+template<typename Basic_type, typename Index_type>
+VOp_norm2<Basic_type, Index_type>::VOp_norm2(Index_type I0, Index_type I1, Index_type I2, Basic_type Cte):
+i0(I0), i1(I1), i2(I2), cte(Cte), size(3)
+{  }
+
+template<typename Basic_type, typename Index_type>
+VOp_norm2<Basic_type, Index_type>::~VOp_norm2()
+{  }
+
+template<typename Basic_type, typename Index_type>
+template<class InputIterator>
+Basic_type VOp_norm2<Basic_type, Index_type>::operator()(InputIterator first, InputIterator last)
+{
+  Basic_type N = static_cast<Basic_type>(0);
+  Index_type i = static_cast<Index_type>(0);
+  while(first!=last)
+  {
+    Basic_type n;
+    // TODO remplacer par fonction de norme ici
+    if( i==i0 ){ n = *first; N=N+n*n; }
+    if(size<=1) if( i==i1 ){ n = *first; N=N+n*n; }
+    if(size<=2) if( i==i2 ){ n = *first; N=N+n*n; }
+    ++i;
+    ++first;
+  }
+  N=N*cte;
+  return static_cast<Basic_type>( sqrt( static_cast<double>(N) ) );
+}
+
+///
+/// \class VPredicate
+///
+/// Predicate applyed to a vector
+/// Applique le prédicat unaire UnaryPredicate Pred au résultat de l'opération InputOperator Op sur
+/// une liste de valeurs de type Basic_type list et retourne le résultat sous forme de booléen
+///
+template<typename Basic_type>
+class VPredicate
+{
+  private:
+    std::vector<Basic_type> list;
+  public:
+    ///
+    /// \brief Constructeur par defaut
+    ///
+    VPredicate(void);
+    
+    ///
+    /// \brief Constructeur définissant la taille de list
+    ///
+    VPredicate(unsigned int size);
+    virtual ~VPredicate();
+    
+    ///
+    /// \brief Test Pred( Op(list.begin(), list.end()) )
+    ///
+    template <class InputOperator, class UnaryPredicate>
+    bool operator()(InputOperator Op, UnaryPredicate Pred);
+    
+    ///
+    /// \brief Ajouter un élément à list
+    /// \param value valeur de type Basic_type à ajouter au vecteur list
+    ///
+    void add(Basic_type& value);
+    
+    ///
+    /// \brief Vider list
+    ///
+    void reset(void);
+};
+
+//
+//
+//
+template<typename Basic_type>
+VPredicate<Basic_type>::VPredicate(void):list()
+{  };
+
+//
+//
+//
+template<typename Basic_type>
+VPredicate<Basic_type>::VPredicate(unsigned int size):list()
+{  list.resize(size);  };
+
+//
+//
+//
+template<typename Basic_type>
+VPredicate<Basic_type>::~VPredicate()
+{  list.clear();  }
+
+//
+//
+//
+template<typename Basic_type>
+void VPredicate<Basic_type>::add(Basic_type& value)
+{  list.push_back( value );  }
+
+//
+//
+//
+template<typename Basic_type>
+void VPredicate<Basic_type>::reset(void)
+{  list.clear();  }
+
+//
+//
+//
+template<typename Basic_type>
+template <class InputOperator, class UnaryPredicate>
+bool VPredicate<Basic_type>::operator()(InputOperator Op, UnaryPredicate Pred)
+{  return Pred( Op(list.begin(), list.end()) );  };
+
+///
 /// \class FileReader
 ///
 /// Ensemble de Foncteurs servant à lire les fichiers
@@ -100,7 +267,7 @@ class FileReader
   /// \return 0 si la lecture est réussie, 1 si une erreur s'est produite.
   ///
   template<class T>
-  Basic DIM(std::string& data_file, std::string& balise, unsigned int Nargs, std::vector<T>& lines,
+  Basic dim(std::string& data_file, std::string& balise, unsigned int Nargs, std::vector<T>& lines,
           const char cd, const char ld, unsigned int Ignore);
 
   ///
@@ -127,7 +294,7 @@ class FileReader
   /// \return 0 si la lecture est réussie, 1 si une erreur s'est produite.
   ///
   template<class T>
-  Basic DIM(std::ifstream& file, std::string& balise, unsigned int Nargs, std::vector<T>& lines,
+  Basic dim(std::ifstream& file, std::string& balise, unsigned int Nargs, std::vector<T>& lines,
           const char cd, const char ld, unsigned int Ignore);
   // ------------------------------------------ GET 1 ------------------------------------------ //
   ///
@@ -152,7 +319,7 @@ class FileReader
   /// \return 1 si la lecture a échouée, 0 si la lecture a réussie.
   ///
   template<class T>
-  Basic GET(std::string& data_file, unsigned int& Nlines, std::vector<T>& cols,
+  Basic get(std::string& data_file, unsigned int& Nlines, std::vector<T>& cols,
           const char cd, const char ld, unsigned int Ignore);
   
   ///
@@ -163,7 +330,7 @@ class FileReader
   /// \return 1 si la lecture a échouée, 0 si la lecture a réussie.
   ///
   template<class T>
-  Basic GET(std::ifstream& file, unsigned int& Nlines, std::vector<T>& cols);
+  Basic get(std::ifstream& file, unsigned int& Nlines, std::vector<T>& cols);
   
   ///
   /// \brief Version de get() simple sans paramètre par défaut et passant un flux
@@ -176,7 +343,7 @@ class FileReader
   /// \return 1 si la lecture a échouée, 0 si la lecture a réussie.
   ///
   template<class T>
-  Basic GET(std::ifstream& file, unsigned int& Nlines, std::vector<T>& cols,
+  Basic get(std::ifstream& file, unsigned int& Nlines, std::vector<T>& cols,
           const char cd, const char ld, unsigned int Ignore);
 
   // ------------------------------------------ GET N ------------------------------------------ //
@@ -208,7 +375,7 @@ class FileReader
   /// \return 0 si la lecture est réuissie, 1 en cas d'erreur.
   ///
   template<class T>
-  Basic GET(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
+  Basic get(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
           std::vector< std::vector<T> >& cols, const char cd, const char ld, unsigned int Ignore);
   
   ///
@@ -236,7 +403,7 @@ class FileReader
   /// \return 0 si la lecture est réuissie, 1 en cas d'erreur.
   ///
   template<class T>
-  Basic GET(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
+  Basic get(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
           std::vector< std::vector<T> >& cols, const char cd, const char ld, unsigned int Ignore);
 
   // ----------------------------------------- SGET N ------------------------------------------ //
@@ -284,7 +451,7 @@ class FileReader
   /// \return 0 si la lecture est réuissie, 1 en cas d'erreur.
   ///
   template<class T>
-  Basic SGET(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
+  Basic sget(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
              std::vector< unsigned int >& Sel_col, std::vector< std::vector<T> >& cols,
              const char cd, const char ld, unsigned int Ignore, const bool file_ordered);
 
@@ -304,7 +471,7 @@ class FileReader
   /// \return 0 si la lecture est réuissie, 1 en cas d'erreur.
   ///
   template<class T>
-  Basic SGET(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
+  Basic sget(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
              std::vector< unsigned int >& Sel_col, std::vector< std::vector<T> >& cols,
              const char cd, const char ld, unsigned int Ignore, const bool file_ordered);
   
@@ -366,7 +533,7 @@ class FileReader
   /// \return 0 si la lecture est réuissie, 1 en cas d'erreur.
   ///
   template<class T>
-  Basic EXTR(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
+  Basic extr(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
              std::vector< unsigned int >& Sel_col, unsigned int& From, unsigned int& By,
              std::vector< std::vector<T> >& cols,
              const char cd, const char ld, unsigned int Ignore, const bool file_ordered);
@@ -390,9 +557,116 @@ class FileReader
   /// \return 0 si la lecture est réuissie, 1 en cas d'erreur.
   ///
   template<class T>
-  Basic EXTR(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
+  Basic extr(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
              std::vector< unsigned int >& Sel_col, unsigned int& From, unsigned int& By,
              std::vector< std::vector<T> >& cols,
+             const char cd, const char ld, unsigned int Ignore, const bool file_ordered);
+  
+  // -------------------------------------- EXTR N < LIM----------------------------------------- //
+  ///
+  /// \brief Lecture de N colonnes en passant les indices non consécutifs des colonnes à récupérer
+  /// jusqu'à ce que la condition d'arrêt Pred (Op(ligne lue)) soit vérifiée
+  /// et en imposant de commencer la lecture à partir d'une ligne par saut d'un nombre donné de lignes
+  ///
+  /// Possède les mêmes défaut que sget() et SGET()
+  /// \param data_file : nom du fichier
+  /// \param Ncols
+  /// \param Nlines
+  /// \param Sel_col
+  /// \param From
+  /// \param By
+  /// \param cols
+  /// \param Pred : Prédicat unaire renvoyant un booléen
+  /// \param Op : Opérateur prenant un itérateur de début et de fin sur un vecteur, calcule un résultat
+  /// scalaire à partir du vecteur, résultat qui est passé à Pred qui commande la sortie de la fonction
+  /// si la condition est remplie
+  /// \return 0 si la lecture est réuissie, 1 en cas d'erreur.
+  ///
+  template<class T, class UnaryPredicate, class LineOperator>
+  Basic extr(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
+             std::vector< unsigned int >& Sel_col, unsigned int& From, unsigned int& By,
+             std::vector< std::vector<T> >& cols, UnaryPredicate Pred, LineOperator Op);
+  
+  ///
+  /// \brief Lecture de N colonnes en passant les indices non consécutifs des colonnes à récupérer
+  /// et en imposant de commencer la lecture à partir d'une ligne par saut d'un nombre donné de lignes
+  /// jusqu'à ce que la condition d'arrêt Pred (Op(ligne lue)) soit vérifiée
+  ///
+  /// Possède les mêmes défaut que sget() et SGET()
+  /// \param file : flux sur le fichier
+  /// \param Ncols
+  /// \param Nlines
+  /// \param Sel_col
+  /// \param From
+  /// \param By
+  /// \param cols
+  /// \param Pred : Prédicat unaire renvoyant un booléen
+  /// \param Op : Opérateur prenant un itérateur de début et de fin sur un vecteur, calcule un résultat
+  /// scalaire à partir du vecteur, résultat qui est passé à Pred qui commande la sortie de la fonction
+  /// si la condition est remplie
+  /// \return 0 si la lecture est réuissie, 1 en cas d'erreur.
+  ///
+  template<class T, class UnaryPredicate, class LineOperator>
+  Basic extr(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
+             std::vector< unsigned int >& Sel_col,  unsigned int& From, unsigned int& By,
+             std::vector< std::vector<T> >& cols, UnaryPredicate Pred, LineOperator Op);
+  
+  ///
+  /// \brief Lecture de N colonnes en passant les indices non consécutifs des colonnes à récupérer
+  /// et en imposant de commencer la lecture à partir d'une ligne par saut d'un nombre donné de lignes
+  /// jusqu'à ce que la condition d'arrêt Pred (Op(ligne lue)) soit vérifiée
+  ///
+  /// Possède les mêmes défaut que sget() et SGET()
+  /// \param data_file : nom du fichier
+  /// \param Ncols
+  /// \param Nlines
+  /// \param Sel_col
+  /// \param From
+  /// \param By
+  /// \param cols
+  /// \param Pred : Prédicat unaire renvoyant un booléen
+  /// \param Op : Opérateur prenant un itérateur de début et de fin sur un vecteur, calcule un résultat
+  /// scalaire à partir du vecteur, résultat qui est passé à Pred qui commande la sortie de la fonction
+  /// si la condition est remplie
+  /// \param cd
+  /// \param ld
+  /// \param Ignore
+  /// \param file_ordered
+  /// \return 0 si la lecture est réuissie, 1 en cas d'erreur.
+  ///
+  template<class T, class UnaryPredicate, class LineOperator>
+  Basic extr(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
+             std::vector< unsigned int >& Sel_col, unsigned int& From, unsigned int& By,
+             std::vector< std::vector<T> >& cols, UnaryPredicate Pred, LineOperator Op,
+             const char cd, const char ld, unsigned int Ignore, const bool file_ordered);
+
+  ///
+  /// \brief Lecture de N colonnes en passant les indices non consécutifs des colonnes à récupérer
+  /// et en imposant de commencer la lecture à partir d'une ligne par saut d'un nombre donné de lignes
+  /// jusqu'à ce que la condition d'arrêt Pred (Op(ligne lue)) soit vérifiée
+  ///
+  /// Possède les mêmes défaut que sget() et SGET()
+  /// \param file : flux sur le fichier
+  /// \param Ncols
+  /// \param Nlines
+  /// \param Sel_col
+  /// \param From
+  /// \param By
+  /// \param cols
+  /// \param Pred : Prédicat unaire renvoyant un booléen
+  /// \param Op : Opérateur prenant un itérateur de début et de fin sur un vecteur, calcule un résultat
+  /// scalaire à partir du vecteur, résultat qui est passé à Pred qui commande la sortie de la fonction
+  /// si la condition est remplie
+  /// \param cd
+  /// \param ld
+  /// \param Ignore
+  /// \param file_ordered
+  /// \return 0 si la lecture est réuissie, 1 en cas d'erreur.
+  ///
+  template<class T, class UnaryPredicate, class LineOperator>
+  Basic extr(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
+             std::vector< unsigned int >& Sel_col, unsigned int& From, unsigned int& By,
+             std::vector< std::vector<T> >& cols, UnaryPredicate Pred, LineOperator Op,
              const char cd, const char ld, unsigned int Ignore, const bool file_ordered);
   
   // --------------------------------------- GET N x M ------------------------------------------ //
@@ -430,7 +704,7 @@ class FileReader
   /// \return 1 si la lecture a échouée, 0 si la lecture a réussie.
   ///
   template<class T, class U>
-  Basic GET(std::string& data_file, unsigned int Ncols_T, unsigned int Ncols_U, unsigned int& Nlines,
+  Basic get(std::string& data_file, unsigned int Ncols_T, unsigned int Ncols_U, unsigned int& Nlines,
             std::vector< std::vector<T> >& cols_T, std::vector< std::vector<U> >& cols_U,
             const char cd, const char ld, unsigned int Ignore);
 
@@ -463,7 +737,7 @@ class FileReader
   /// \return 1 si la lecture a échouée, 0 si la lecture a réussie.
   ///
   template<class T, class U>
-  Basic GET(std::ifstream& file, unsigned int Ncols_T, unsigned int Ncols_U, unsigned int& Nlines,
+  Basic get(std::ifstream& file, unsigned int Ncols_T, unsigned int Ncols_U, unsigned int& Nlines,
             std::vector< std::vector<T> >& cols_T, std::vector< std::vector<U> >& cols_U,
             const char cd, const char ld, unsigned int Ignore);
   
@@ -494,7 +768,7 @@ class FileReader
   Basic FileReader<Basic>::dim(std::string& data_file, std::string& balise, unsigned int Nargs,
                              std::vector<T>& lines)
   {
-    return DIM<T>(data_file, balise, Nargs, lines, '#', '\n', 0);
+    return dim<T>(data_file, balise, Nargs, lines, '#', '\n', 0);
   }
   
   //
@@ -505,7 +779,7 @@ class FileReader
   Basic FileReader<Basic>::dim(std::ifstream& file, std::string& balise, unsigned int Nargs,
                              std::vector<T>& lines)
   {
-    return DIM<T>(file, balise, Nargs, lines, '#', '\n', 0);
+    return dim<T>(file, balise, Nargs, lines, '#', '\n', 0);
   }
 
   //
@@ -513,7 +787,7 @@ class FileReader
   //
   template <typename Basic>
   template<class T>
-  Basic FileReader<Basic>::DIM(std::string& data_file, std::string& balise,
+  Basic FileReader<Basic>::dim(std::string& data_file, std::string& balise,
                              unsigned int Nargs, std::vector<T>& lines,
                              const char cd, const char ld, unsigned int Ignore)
   {
@@ -524,7 +798,7 @@ class FileReader
       std::cerr<<"can't open file "<<data_file.c_str()<<std::endl;
       return static_cast<Basic>(1);
     }
-    status = DIM<T>(file, balise, Nargs, lines, cd, ld, Ignore);
+    status = dim<T>(file, balise, Nargs, lines, cd, ld, Ignore);
     file.close();
     return status;
   }
@@ -534,7 +808,7 @@ class FileReader
   //
   template <typename Basic>
   template<class T>
-  Basic FileReader<Basic>::DIM(std::ifstream& file, std::string& balise, unsigned int Nargs,
+  Basic FileReader<Basic>::dim(std::ifstream& file, std::string& balise, unsigned int Nargs,
                              std::vector<T>& lines,
                              const char cd, const char ld, unsigned int Ignore)
   {
@@ -591,7 +865,7 @@ class FileReader
   Basic FileReader<Basic>::get(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
 		             std::vector< std::vector<T> >& cols)
   {
-    return GET<T>(data_file,Ncols,Nlines,cols,'#','\n',0);
+    return get<T>(data_file,Ncols,Nlines,cols,'#','\n',0);
   }
 
   //
@@ -602,7 +876,7 @@ class FileReader
   Basic FileReader<Basic>::get(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
                              std::vector< std::vector<T> >& cols)
   {
-    return GET<T>(file,Ncols,Nlines,cols,'#','\n',0);
+    return get<T>(file,Ncols,Nlines,cols,'#','\n',0);
   }
 
   
@@ -611,7 +885,7 @@ class FileReader
   //
   template <typename Basic>
   template<class T>
-  Basic FileReader<Basic>::GET(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
+  Basic FileReader<Basic>::get(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
 		             std::vector< std::vector<T> >& cols,
                              const char cd, const char ld, unsigned int Ignore)
   {
@@ -622,7 +896,7 @@ class FileReader
       std::cerr<<"(reader) can't open file "<<data_file.c_str()<<std::endl;
       return static_cast<Basic>(1);
     }
-    status = GET<T>(file,Ncols,Nlines,cols,cd,ld,Ignore);
+    status = get<T>(file,Ncols,Nlines,cols,cd,ld,Ignore);
     file.close();
     return status;
   }
@@ -632,7 +906,7 @@ class FileReader
   //
   template <typename Basic>
   template<class T>
-  Basic FileReader<Basic>::GET(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
+  Basic FileReader<Basic>::get(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
                              std::vector< std::vector<T> >& cols,
                              const char cd, const char ld, unsigned int Ignore)
   {
@@ -677,7 +951,7 @@ class FileReader
                              unsigned int& Nlines,
 		             std::vector< std::vector<T> >& cols_T, std::vector< std::vector<U> >& cols_U)
   {
-    return GET<T>(data_file,Ncols_T,Ncols_U,Nlines,cols_T,cols_U,'#','\n',0);
+    return get<T>(data_file,Ncols_T,Ncols_U,Nlines,cols_T,cols_U,'#','\n',0);
   }
   
   //
@@ -689,14 +963,14 @@ class FileReader
                              unsigned int& Nlines,
                              std::vector< std::vector<T> >& cols_T, std::vector< std::vector<U> >& cols_U)
   {
-    return GET<T>(file,Ncols_T,Ncols_U,Nlines,cols_T,cols_U,'#','\n',0);
+    return get<T>(file,Ncols_T,Ncols_U,Nlines,cols_T,cols_U,'#','\n',0);
   }
   //
   //
   //
   template <typename Basic>
   template<class T, class U>
-  Basic FileReader<Basic>::GET(std::string& data_file, unsigned int Ncols_T, unsigned int Ncols_U,
+  Basic FileReader<Basic>::get(std::string& data_file, unsigned int Ncols_T, unsigned int Ncols_U,
                              unsigned int& Nlines,
 		             std::vector< std::vector<T> >& cols_T, std::vector< std::vector<U> >& cols_U,
 		             const char cd, const char ld, unsigned int Ignore)
@@ -708,7 +982,7 @@ class FileReader
       std::cerr<<"(reader) can't open file "<<data_file.c_str()<<std::endl;
       return static_cast<Basic>(1);
     }
-    status = GET<T>(file,Ncols_T,Ncols_U,Nlines,cols_T,cols_U,cd,ld,Ignore);
+    status = get<T>(file,Ncols_T,Ncols_U,Nlines,cols_T,cols_U,cd,ld,Ignore);
     file.close();
     return status;
   }
@@ -718,7 +992,7 @@ class FileReader
   //
   template <typename Basic>
   template<class T, class U>
-  Basic FileReader<Basic>::GET(std::ifstream& file, unsigned int Ncols_T, unsigned int Ncols_U,
+  Basic FileReader<Basic>::get(std::ifstream& file, unsigned int Ncols_T, unsigned int Ncols_U,
                              unsigned int& Nlines,
                              std::vector< std::vector<T> >& cols_T, std::vector< std::vector<U> >& cols_U,
                              const char cd, const char ld, unsigned int Ignore)
@@ -771,7 +1045,7 @@ class FileReader
   template<class T>
   Basic FileReader<Basic>::get(std::string& data_file, unsigned int& Nlines, std::vector<T>& cols)
   {
-    return GET<T>(data_file,Nlines,cols,'#','\n',0);
+    return get<T>(data_file,Nlines,cols,'#','\n',0);
   }
   
   //
@@ -779,7 +1053,7 @@ class FileReader
   //
   template <typename Basic>
   template<class T>
-  Basic FileReader<Basic>::GET(std::string& data_file, unsigned int& Nlines, std::vector<T>& cols,
+  Basic FileReader<Basic>::get(std::string& data_file, unsigned int& Nlines, std::vector<T>& cols,
                              const char cd, const char ld, unsigned int Ignore)
   {
     std::ifstream file( data_file.c_str() );
@@ -789,7 +1063,7 @@ class FileReader
       std::cerr<<"(reader) can't open file "<<data_file.c_str()<<std::endl;
       return static_cast<Basic>(1);
     }
-    status = GET<T>(file,Nlines,cols,cd,ld,Ignore);
+    status = get<T>(file,Nlines,cols,cd,ld,Ignore);
     file.close();
     return status;
   }
@@ -799,9 +1073,9 @@ class FileReader
   //
   template <typename Basic>
   template<class T>
-  Basic FileReader<Basic>::GET(std::ifstream& file, unsigned int& Nlines, std::vector<T>& cols)
+  Basic FileReader<Basic>::get(std::ifstream& file, unsigned int& Nlines, std::vector<T>& cols)
   {
-    return GET<T>(file,Nlines,cols,'#','\n',0);
+    return get<T>(file,Nlines,cols,'#','\n',0);
   }
   
   //
@@ -809,7 +1083,7 @@ class FileReader
   //
   template <typename Basic>
   template<class T>
-  Basic FileReader<Basic>::GET(std::ifstream& file, unsigned int& Nlines, std::vector<T>& cols,
+  Basic FileReader<Basic>::get(std::ifstream& file, unsigned int& Nlines, std::vector<T>& cols,
                              const char cd, const char ld, unsigned int Ignore)
   {
     unsigned int maxline = Nlines;
@@ -847,7 +1121,7 @@ class FileReader
                               std::vector< unsigned int >& Sel_col,
                               std::vector< std::vector<T> >& cols)
   {
-    return SGET<T>(data_file,Ncols,Nlines,Sel_col,cols,'#','\n',0, false);
+    return sget<T>(data_file,Ncols,Nlines,Sel_col,cols,'#','\n',0, false);
   }
 
   //
@@ -859,7 +1133,7 @@ class FileReader
                               std::vector< unsigned int >& Sel_col,
                               std::vector< std::vector<T> >& cols)
   {
-    return SGET<T>(file,Ncols,Nlines,Sel_col,cols,'#','\n',0, false);
+    return sget<T>(file,Ncols,Nlines,Sel_col,cols,'#','\n',0, false);
   }
   
   //
@@ -867,7 +1141,7 @@ class FileReader
   //
   template <typename Basic>
   template<class T>
-  Basic FileReader<Basic>::SGET(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
+  Basic FileReader<Basic>::sget(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
                               std::vector< unsigned int >& Sel_col,
                               std::vector< std::vector<T> >& cols,
                               const char cd, const char ld, unsigned int Ignore, const bool file_ordered)
@@ -879,7 +1153,7 @@ class FileReader
       std::cerr<<"(reader) can't open file "<<data_file.c_str()<<std::endl;
       return static_cast<Basic>(1);
     }
-    status = SGET<T>(file,Ncols,Nlines,Sel_col,cols,cd,ld,Ignore, file_ordered);
+    status = sget<T>(file,Ncols,Nlines,Sel_col,cols,cd,ld,Ignore, file_ordered);
     file.close();
     return status;
   }
@@ -889,7 +1163,7 @@ class FileReader
   //
   template <typename Basic>
   template<class T>
-  Basic FileReader<Basic>::SGET(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
+  Basic FileReader<Basic>::sget(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
                               std::vector< unsigned int >& Sel_col,
                               std::vector< std::vector<T> >& cols,
                               const char cd, const char ld, unsigned int Ignore, const bool file_ordered)
@@ -953,7 +1227,7 @@ class FileReader
                                 std::vector< unsigned int >& Sel_col, unsigned int& From, unsigned int& By,
                                 std::vector< std::vector<T> >& cols)
   {
-    return EXTR<T>(data_file,Ncols,Nlines,Sel_col,From, By, cols,'#','\n',0, false);
+    return extr<T>(data_file,Ncols,Nlines,Sel_col,From, By, cols,'#','\n',0, false);
   }
 
   //
@@ -965,7 +1239,7 @@ class FileReader
                               std::vector< unsigned int >& Sel_col,  unsigned int& From, unsigned int& By,
                               std::vector< std::vector<T> >& cols)
   {
-    return EXTR<T>(file,Ncols,Nlines,Sel_col,From, By, cols,'#','\n',0, false);
+    return extr<T>(file,Ncols,Nlines,Sel_col,From, By, cols,'#','\n',0, false);
   }
   
   //
@@ -973,7 +1247,7 @@ class FileReader
   //
   template <typename Basic>
   template<class T>
-  Basic FileReader<Basic>::EXTR(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
+  Basic FileReader<Basic>::extr(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
                               std::vector< unsigned int >& Sel_col, unsigned int& From, unsigned int& By,
                               std::vector< std::vector<T> >& cols,
                               const char cd, const char ld, unsigned int Ignore, const bool file_ordered)
@@ -985,7 +1259,7 @@ class FileReader
       std::cerr<<"(reader) can't open file "<<data_file.c_str()<<std::endl;
       return static_cast<Basic>(1);
     }
-    status = EXTR<T>(file,Ncols,Nlines,Sel_col,From, By, cols,cd,ld,Ignore, file_ordered);
+    status = extr<T>(file,Ncols,Nlines,Sel_col,From, By, cols,cd,ld,Ignore, file_ordered);
     file.close();
     return status;
   }
@@ -995,7 +1269,7 @@ class FileReader
   //
   template <typename Basic>
   template<class T>
-  Basic FileReader<Basic>::EXTR(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
+  Basic FileReader<Basic>::extr(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
                               std::vector< unsigned int >& Sel_col, unsigned int& From, unsigned int& By,
                               std::vector< std::vector<T> >& cols,
                               const char cd, const char ld, unsigned int Ignore, const bool file_ordered)
@@ -1047,6 +1321,136 @@ class FileReader
     if(maxline) if(Nlines<maxline) return static_cast<Basic>(1);
     return static_cast<Basic>(0);
   }
+
+  // --------------------------------------------------------------------------------------- //
+  //                                EXTR N < LIM                                             //
+  // --------------------------------------------------------------------------------------- //
+  //
+  // From = coimmencer à la ligne i
+  // By = lire toutes les lignes
+  // Stop if Predicate(cond) is true -> le predicat prend un vecteur en entrée !
+  //
+  template <typename Basic>
+  template<class T, class UnaryPredicate, class LineOperator>
+  Basic FileReader<Basic>::extr(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
+                                std::vector< unsigned int >& Sel_col, unsigned int& From, unsigned int& By,
+                                std::vector< std::vector<T> >& cols, UnaryPredicate Pred, LineOperator Op)
+  {
+    return extr<T>(data_file,Ncols,Nlines,Sel_col,From,By,cols,Pred,Op,'#','\n',0,false);
+  }
+
+  //
+  //
+  //
+  template <typename Basic>
+  template<class T, class UnaryPredicate, class LineOperator>
+  Basic FileReader<Basic>::extr(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
+                              std::vector< unsigned int >& Sel_col,  unsigned int& From, unsigned int& By,
+                              std::vector< std::vector<T> >& cols, UnaryPredicate Pred, LineOperator Op)
+  {
+    return extr<T>(file,Ncols,Nlines,Sel_col,From,By,cols,Pred,Op,'#','\n',0,false);
+  }
+  
+  //
+  //
+  //
+  template <typename Basic>
+  template<class T, class UnaryPredicate, class LineOperator>
+  Basic FileReader<Basic>::extr(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
+                              std::vector< unsigned int >& Sel_col, unsigned int& From, unsigned int& By,
+                              std::vector< std::vector<T> >& cols, UnaryPredicate Pred, LineOperator Op,
+                              const char cd, const char ld, unsigned int Ignore, const bool file_ordered)
+  {
+    Basic status = static_cast<Basic>(0);
+    std::ifstream file( data_file.c_str() );
+    if( file.fail() )
+    {
+      std::cerr<<"(reader) can't open file "<<data_file.c_str()<<std::endl;
+      return static_cast<Basic>(1);
+    }
+    status = extr<T>(file,Ncols,Nlines,Sel_col,From, By, cols,Pred,Op,cd,ld,Ignore, file_ordered);
+    file.close();
+    return status;
+  }
+
+  //
+  //
+  //
+  template <typename Basic>
+  template<class T, class UnaryPredicate, class LineOperator>
+  Basic FileReader<Basic>::extr(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
+                              std::vector< unsigned int >& Sel_col, unsigned int& From, unsigned int& By,
+                              std::vector< std::vector<T> >& cols, UnaryPredicate Pred, LineOperator Op,
+                              const char cd, const char ld, unsigned int Ignore, const bool file_ordered)
+  {
+    unsigned int maxline = Nlines, cline = 0;
+    std::string line;
+    if(Ncols<1) return static_cast<Basic>(1);
+    if(Sel_col.size() != Ncols) return static_cast<Basic>(1);
+    VPredicate<T> StopPoint;
+    for(unsigned int i=0;i<cols.size();++i) cols[i].clear(); cols.clear();
+    cols.resize(Ncols);
+    Nlines = 0; cline=0;
+    while( std::getline( file, line, ld ))
+    {
+      T r;
+      StopPoint.reset();
+      if( Ignore>0 )
+      {
+        Ignore--;
+        continue;
+      }
+      char c = line[0];
+      if( c==cd ) continue;
+      if( (cline-From)<0 ){cline++; continue; } //Commence à lire quand cline = From (cline compté à partir de 0)
+      if( (cline-From)%By != 0 ){cline++; continue; }
+      std::istringstream getsub( line );
+      if( file_ordered )
+      {
+        // Cette méthode range les colonnes dans l'ordre du fichier : +rapide
+        for(unsigned int i=0;i<Ncols;++i)
+        {
+          getsub>>r;
+          if( find( Sel_col.begin(), Sel_col.end(), i)!=Sel_col.end() )
+          {
+            cols[i].push_back(r); 
+            StopPoint.add(r);
+          }
+          if( StopPoint(Op, Pred)  ) return static_cast<Basic>(0);
+        }
+      }
+      else
+      {
+        // Cette méthode range les colonnes dans l'ordre de Sel_col : +lent
+        for(unsigned int j=0;j<Sel_col.size();++j)
+        {
+          for(unsigned int i=0;i<Ncols;++i)
+          {
+            getsub>>r;
+            if( i==Sel_col[j] )
+            {
+              cols[i].push_back(r);
+              StopPoint.add(r);
+            }
+          }
+          if( StopPoint(Op, Pred) ) return static_cast<Basic>(0);
+        }
+      }
+      Nlines++; cline++;
+      if(maxline) if(Nlines>=maxline) break;
+    } //end while
+    if(maxline) if(Nlines<maxline) return static_cast<Basic>(1);
+    return static_cast<Basic>(0);
+  }
+  
   
 #define _CLASS_READER_
 #endif
+
+// Example :
+//
+// FileReader<unsigned int> Import;
+// Import.extr<double>( file, Sel_col.size(), Nlines, Sel_col, From, By, DATA,
+//                                      std::bind2nd(std::greater_equal<double>(),xmax),
+//                                      VOp_norm2<double, unsigned int>(Sel_col[0],Sel_col[1],1.0e0) );
+//
