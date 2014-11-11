@@ -1388,6 +1388,7 @@ class FileReader
                               const char cd, const char ld, unsigned int Ignore, const bool file_ordered)
   {
     unsigned int maxline = Nlines, cline = 0;
+    bool tostp=false;
     std::string line;
     if(Ncols<1) return static_cast<Basic>(1);
     if(Sel_col.size() < 1) return static_cast<Basic>(1);
@@ -1420,8 +1421,9 @@ class FileReader
             cols[i].push_back(r); 
             StopPoint.add(r);
           }
-          if( StopPoint(Op, Pred)  ) return static_cast<Basic>(0);
+          if( StopPoint(Op, Pred)  ) tostop=true;
         }
+        if(tostop) return static_cast<Basic>(0);
       }
       else
       {
@@ -1437,10 +1439,11 @@ class FileReader
               StopPoint.add(r);
             }
           }
-          if( StopPoint(Op, Pred) ) return static_cast<Basic>(0);
+          if( StopPoint(Op, Pred) ) tostop=true;
           getsub.clear();
           getsub.seekg(0, getsub.beg);
         }
+        if(tostop) return static_cast<Basic>(0);
       }
       Nlines++; cline++;
       if(maxline) if(Nlines>=maxline) break;
