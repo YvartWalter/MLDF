@@ -617,8 +617,9 @@ class FileReader
   /// jusqu'à ce que la condition d'arrêt Pred (Op(ligne lue)) soit vérifiée
   ///
   /// Possède les mêmes défaut que sget() et SGET()
+  /// Ne se soucie pas de l'ordre des colonnes sélectionnées par rapport à celui du fichier
   /// \param data_file : nom du fichier
-  /// \param Ncols
+  /// \param Ncols : nombre de colonnes totales dans le fichier
   /// \param Nlines
   /// \param Sel_col
   /// \param From
@@ -646,8 +647,9 @@ class FileReader
   /// jusqu'à ce que la condition d'arrêt Pred (Op(ligne lue)) soit vérifiée
   ///
   /// Possède les mêmes défaut que sget() et SGET()
+  /// Ne se soucie pas de l'ordre des colonnes sélectionnées par rapport à celui du fichier
   /// \param file : flux sur le fichier
-  /// \param Ncols
+  /// \param Ncols : nombre de colonne totales dans le fichier
   /// \param Nlines
   /// \param Sel_col
   /// \param From
@@ -1277,9 +1279,9 @@ class FileReader
     unsigned int maxline = Nlines, cline = 0;
     std::string line;
     if(Ncols<1) return static_cast<Basic>(1);
-    if(Sel_col.size() != Ncols) return static_cast<Basic>(1);
+    if(Sel_col.size() <1) return static_cast<Basic>(1);
     for(unsigned int i=0;i<cols.size();++i) cols[i].clear(); cols.clear();
-    cols.resize(Ncols);
+    cols.resize(Sel_col.size());
     Nlines = 0; cline=0;
     while( std::getline( file, line, ld ))
     {
@@ -1311,8 +1313,10 @@ class FileReader
           for(unsigned int i=0;i<Ncols;++i)
           {
             getsub>>r;
-            if( i==Sel_col[j] ){ cols[i].push_back(r); }
+            if( i==Sel_col[j] ){ cols[j].push_back(r); }
           }
+          getsub.clear();
+          getsub.seekg(0, getsub.beg);
         }
       }
       Nlines++; cline++;
@@ -1386,10 +1390,10 @@ class FileReader
     unsigned int maxline = Nlines, cline = 0;
     std::string line;
     if(Ncols<1) return static_cast<Basic>(1);
-    if(Sel_col.size() != Ncols) return static_cast<Basic>(1);
+    if(Sel_col.size() < 1) return static_cast<Basic>(1);
     VPredicate<T> StopPoint;
     for(unsigned int i=0;i<cols.size();++i) cols[i].clear(); cols.clear();
-    cols.resize(Ncols);
+    cols.resize(Sel_col.size());
     Nlines = 0; cline=0;
     while( std::getline( file, line, ld ))
     {
@@ -1429,11 +1433,13 @@ class FileReader
             getsub>>r;
             if( i==Sel_col[j] )
             {
-              cols[i].push_back(r);
+              cols[j].push_back(r);
               StopPoint.add(r);
             }
           }
           if( StopPoint(Op, Pred) ) return static_cast<Basic>(0);
+          getsub.clear();
+          getsub.seekg(0, getsub.beg);
         }
       }
       Nlines++; cline++;
@@ -1446,11 +1452,3 @@ class FileReader
   
 #define _CLASS_READER_
 #endif
-
-// Example :
-//
-// FileReader<unsigned int> Import;
-// Import.extr<double>( file, Sel_col.size(), Nlines, Sel_col, From, By, DATA,
-//                                      std::bind2nd(std::greater_equal<double>(),xmax),
-//                                      VOp_norm2<double, unsigned int>(Sel_col[0],Sel_col[1],1.0e0) );
-//
