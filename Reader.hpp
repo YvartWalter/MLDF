@@ -671,6 +671,125 @@ class FileReader
              std::vector< std::vector<T> >& cols, UnaryPredicate Pred, LineOperator Op,
              const char cd, const char ld, unsigned int Ignore, const bool file_ordered);
   
+  // -------------------------------------- EXTR N < LIM----------------------------------------- //
+  ///
+  /// \brief Lecture de N colonnes en passant les indices non consécutifs des colonnes à récupérer
+  /// jusqu'à ce que la condition d'arrêt Pred (Op(ligne lue)) soit vérifiée
+  /// et en imposant de commencer la lecture à partir d'une ligne par saut d'un nombre donné de lignes
+  ///
+  /// Possède les mêmes défaut que sget() et SGET()
+  /// \param data_file : nom du fichier
+  /// \param Ncols
+  /// \param Nlines
+  /// \param Sel_col
+  /// \param From
+  /// \param By
+  /// \param cols
+  /// \param mults : liste de multiplicateur, chacun correspond à une colonne = conversion d'unité
+  /// les valeurs lues de la colonne correpondante seront multipliée par la valeur associée doit
+  /// être de taille Ncols
+  /// \param Pred : Prédicat unaire renvoyant un booléen
+  /// \param Op : Opérateur prenant un itérateur de début et de fin sur un vecteur, calcule un résultat
+  /// scalaire à partir du vecteur, résultat qui est passé à Pred qui commande la sortie de la fonction
+  /// si la condition est remplie
+  /// \return 0 si la lecture est réuissie, 1 en cas d'erreur.
+  ///
+  template<class T, class UnaryPredicate, class LineOperator>
+  Basic extr(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
+             std::vector< unsigned int >& Sel_col, unsigned int& From, unsigned int& By,
+             std::vector< std::vector<T> >& cols, std::vector<T>& mults,
+             UnaryPredicate Pred, LineOperator Op);
+  
+  ///
+  /// \brief Lecture de N colonnes en passant les indices non consécutifs des colonnes à récupérer
+  /// et en imposant de commencer la lecture à partir d'une ligne par saut d'un nombre donné de lignes
+  /// jusqu'à ce que la condition d'arrêt Pred (Op(ligne lue)) soit vérifiée
+  ///
+  /// Possède les mêmes défaut que sget() et SGET()
+  /// \param file : flux sur le fichier
+  /// \param Ncols
+  /// \param Nlines
+  /// \param Sel_col
+  /// \param From
+  /// \param By
+  /// \param cols
+  /// \param mults : multiplicateur de colonne
+  /// \param Pred : Prédicat unaire renvoyant un booléen
+  /// \param Op : Opérateur prenant un itérateur de début et de fin sur un vecteur, calcule un résultat
+  /// scalaire à partir du vecteur, résultat qui est passé à Pred qui commande la sortie de la fonction
+  /// si la condition est remplie
+  /// \return 0 si la lecture est réuissie, 1 en cas d'erreur.
+  ///
+  template<class T, class UnaryPredicate, class LineOperator>
+  Basic extr(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
+             std::vector< unsigned int >& Sel_col,  unsigned int& From, unsigned int& By,
+             std::vector< std::vector<T> >& cols, std::vector<T>& mults,
+             UnaryPredicate Pred, LineOperator Op);
+  
+  ///
+  /// \brief Lecture de N colonnes en passant les indices non consécutifs des colonnes à récupérer
+  /// et en imposant de commencer la lecture à partir d'une ligne par saut d'un nombre donné de lignes
+  /// jusqu'à ce que la condition d'arrêt Pred (Op(ligne lue)) soit vérifiée
+  ///
+  /// Possède les mêmes défaut que sget() et SGET()
+  /// Ne se soucie pas de l'ordre des colonnes sélectionnées par rapport à celui du fichier
+  /// \param data_file : nom du fichier
+  /// \param Ncols : nombre de colonnes totales dans le fichier
+  /// \param Nlines
+  /// \param Sel_col
+  /// \param From
+  /// \param By
+  /// \param cols
+  /// \param mults : multiplicateur de colonne
+  /// \param Pred : Prédicat unaire renvoyant un booléen
+  /// \param Op : Opérateur prenant un itérateur de début et de fin sur un vecteur, calcule un résultat
+  /// scalaire à partir du vecteur, résultat qui est passé à Pred qui commande la sortie de la fonction
+  /// si la condition est remplie
+  /// \param cd
+  /// \param ld
+  /// \param Ignore
+  /// \param file_ordered
+  /// \return 0 si la lecture est réuissie, 1 en cas d'erreur.
+  ///
+  template<class T, class UnaryPredicate, class LineOperator>
+  Basic extr(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
+             std::vector< unsigned int >& Sel_col, unsigned int& From, unsigned int& By,
+             std::vector< std::vector<T> >& cols, std::vector<T>& mults,
+             UnaryPredicate Pred, LineOperator Op,
+             const char cd, const char ld, unsigned int Ignore, const bool file_ordered);
+
+  ///
+  /// \brief Lecture de N colonnes en passant les indices non consécutifs des colonnes à récupérer
+  /// et en imposant de commencer la lecture à partir d'une ligne par saut d'un nombre donné de lignes
+  /// jusqu'à ce que la condition d'arrêt Pred (Op(ligne lue)) soit vérifiée
+  ///
+  /// Possède les mêmes défaut que sget() et SGET()
+  /// Ne se soucie pas de l'ordre des colonnes sélectionnées par rapport à celui du fichier
+  /// \param file : flux sur le fichier
+  /// \param Ncols : nombre de colonne totales dans le fichier
+  /// \param Nlines
+  /// \param Sel_col
+  /// \param From
+  /// \param By
+  /// \param cols
+  /// \param mults : multiplicateur de colonne
+  /// \param Pred : Prédicat unaire renvoyant un booléen
+  /// \param Op : Opérateur prenant un itérateur de début et de fin sur un vecteur, calcule un résultat
+  /// scalaire à partir du vecteur, résultat qui est passé à Pred qui commande la sortie de la fonction
+  /// si la condition est remplie
+  /// \param cd
+  /// \param ld
+  /// \param Ignore
+  /// \param file_ordered
+  /// \return 0 si la lecture est réuissie, 1 en cas d'erreur.
+  ///
+  template<class T, class UnaryPredicate, class LineOperator>
+  Basic extr(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
+             std::vector< unsigned int >& Sel_col, unsigned int& From, unsigned int& By,
+             std::vector< std::vector<T> >& cols, std::vector<T>& mults,
+             UnaryPredicate Pred, LineOperator Op,
+             const char cd, const char ld, unsigned int Ignore, const bool file_ordered);
+  
   // --------------------------------------- GET N x M ------------------------------------------ //
   ///
   /// \brief Même effet que la fonction get() prenant un vecteur de vecteur mais
@@ -1388,7 +1507,7 @@ class FileReader
                               const char cd, const char ld, unsigned int Ignore, const bool file_ordered)
   {
     unsigned int maxline = Nlines, cline = 0;
-    bool tostp=false;
+    bool tostop=false;
     std::string line;
     if(Ncols<1) return static_cast<Basic>(1);
     if(Sel_col.size() < 1) return static_cast<Basic>(1);
@@ -1452,6 +1571,136 @@ class FileReader
     return static_cast<Basic>(0);
   }
   
+  // --------------------------------------------------------------------------------------- //
+  //                                CEXTR N < LIM                                             //
+  // --------------------------------------------------------------------------------------- //
+  //
+  // From = coimmencer à la ligne i
+  // By = lire toutes les lignes
+  // Stop if Predicate(cond) is true -> le predicat prend un vecteur en entrée !
+  // mults : multiplicateur de chaque colonne
+  //
+  template <typename Basic>
+  template<class T, class UnaryPredicate, class LineOperator>
+  Basic FileReader<Basic>::extr(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
+                                std::vector< unsigned int >& Sel_col, unsigned int& From, unsigned int& By,
+                                std::vector< std::vector<T> >& cols, std::vector<T>& mults,
+                                UnaryPredicate Pred, LineOperator Op)
+  {
+    return extr<T>(data_file,Ncols,Nlines,Sel_col,From,By,cols,mults,Pred,Op,'#','\n',0,false);
+  }
+
+  //
+  //
+  //
+  template <typename Basic>
+  template<class T, class UnaryPredicate, class LineOperator>
+  Basic FileReader<Basic>::extr(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
+                              std::vector< unsigned int >& Sel_col,  unsigned int& From, unsigned int& By,
+                              std::vector< std::vector<T> >& cols, std::vector<T>& mults,
+                              UnaryPredicate Pred, LineOperator Op)
+  {
+    return extr<T>(file,Ncols,Nlines,Sel_col,From,By,cols,mults,Pred,Op,'#','\n',0,false);
+  }
   
+  //
+  //
+  //
+  template <typename Basic>
+  template<class T, class UnaryPredicate, class LineOperator>
+  Basic FileReader<Basic>::extr(std::string& data_file, unsigned int Ncols, unsigned int& Nlines,
+                              std::vector< unsigned int >& Sel_col, unsigned int& From, unsigned int& By,
+                              std::vector< std::vector<T> >& cols, std::vector<T>& mults,
+                              UnaryPredicate Pred, LineOperator Op,
+                              const char cd, const char ld, unsigned int Ignore, const bool file_ordered)
+  {
+    Basic status = static_cast<Basic>(0);
+    std::ifstream file( data_file.c_str() );
+    if( file.fail() )
+    {
+      std::cerr<<"(reader) can't open file "<<data_file.c_str()<<std::endl;
+      return static_cast<Basic>(1);
+    }
+    status = extr<T>(file,Ncols,Nlines,Sel_col,From, By, cols,mults,Pred,Op,cd,ld,Ignore, file_ordered);
+    file.close();
+    return status;
+  }
+
+  //
+  //
+  //
+  template <typename Basic>
+  template<class T, class UnaryPredicate, class LineOperator>
+  Basic FileReader<Basic>::extr(std::ifstream& file, unsigned int Ncols, unsigned int& Nlines,
+                              std::vector< unsigned int >& Sel_col, unsigned int& From, unsigned int& By,
+                              std::vector< std::vector<T> >& cols, std::vector<T>& mults,
+                              UnaryPredicate Pred, LineOperator Op,
+                              const char cd, const char ld, unsigned int Ignore, const bool file_ordered)
+  {
+    unsigned int maxline = Nlines, cline = 0;
+    bool tostop=false;
+    std::string line;
+    if(Ncols<1) return static_cast<Basic>(1);
+    if(mults.size()!=Ncols) return static_cast<Basic>(1);
+    if(Sel_col.size() < 1) return static_cast<Basic>(1);
+    VPredicate<T> StopPoint;
+    for(unsigned int i=0;i<cols.size();++i) cols[i].clear(); cols.clear();
+    cols.resize(Sel_col.size());
+    Nlines = 0; cline=0;
+    while( std::getline( file, line, ld ))
+    {
+      T r;
+      StopPoint.reset();
+      if( Ignore>0 )
+      {
+        Ignore--;
+        continue;
+      }
+      char c = line[0];
+      if( c==cd ) continue;
+      if( (cline-From)<0 ){cline++; continue; } //Commence à lire quand cline = From (cline compté à partir de 0)
+      if( (cline-From)%By != 0 ){cline++; continue; }
+      std::istringstream getsub( line );
+      if( file_ordered )
+      {
+        // Cette méthode range les colonnes dans l'ordre du fichier : +rapide
+        for(unsigned int i=0;i<Ncols;++i)
+        {
+          getsub>>r;
+          if( find( Sel_col.begin(), Sel_col.end(), i)!=Sel_col.end() )
+          {
+            cols[i].push_back(r * mults[i]); 
+            StopPoint.add(r);
+          }
+          if( StopPoint(Op, Pred)  ) tostop=true;
+        }
+        if(tostop) return static_cast<Basic>(0);
+      }
+      else
+      {
+        // Cette méthode range les colonnes dans l'ordre de Sel_col : +lent
+        for(unsigned int j=0;j<Sel_col.size();++j)
+        {
+          for(unsigned int i=0;i<Ncols;++i)
+          {
+            getsub>>r;
+            if( i==Sel_col[j] )
+            {
+              cols[j].push_back(r * mults[i]);
+              StopPoint.add(r);
+            }
+          }
+          if( StopPoint(Op, Pred) ) tostop=true;
+          getsub.clear();
+          getsub.seekg(0, getsub.beg);
+        }
+        if(tostop) return static_cast<Basic>(0);
+      }
+      Nlines++; cline++;
+      if(maxline) if(Nlines>=maxline) break;
+    } //end while
+    if(maxline) if(Nlines<maxline) return static_cast<Basic>(1);
+    return static_cast<Basic>(0);
+  }
 #define _CLASS_READER_
 #endif
