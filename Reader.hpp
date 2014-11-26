@@ -205,6 +205,9 @@ bool VPredicate<Basic_type>::operator()(InputOperator Op, UnaryPredicate Pred)
 /// faisant la lecture à partir du flux.
 /// Le travail est toujours effectué par la fonction prenant un flux et les paramètres de lecture.
 /// Version sans regex ou split, n'a pas besoin de la boost ni de bibliothèques tierces
+/// \note Modification : toutes les fonctions ignorent automatiquement les lignes vides
+/// mais les lignes sans données (avec des espaces ou des caractères invalides ne sont pas ignorées
+/// ce qui peut conduire à des erreurs).
 ///
 template <typename Basic>
 class FileReader
@@ -963,9 +966,12 @@ class FileReader
           continue;
         }
         std::istringstream getsub( line );
-        getsub>>r;
-        Nlines++;
-        lines.push_back(r);
+        if(line.size())
+        {
+          getsub>>r;
+          Nlines++;
+          lines.push_back(r);
+        }
         if(Nlines>=Nargs){ break; }
       }
       file.close();
@@ -1048,12 +1054,18 @@ class FileReader
       char c = line[0];
       if( c==cd ) continue;
       std::istringstream getsub( line );
-      for(unsigned int i=0;i<Ncols;++i)
+      //std::cout<<Nlines<<"   "<<line.size()<<" ";
+      if(line.size())
       {
-        getsub>>r;
-        cols[i].push_back(r);
+        for(unsigned int i=0;i<Ncols;++i)
+        {
+          getsub>>r;
+          cols[i].push_back(r);
+          //std::cout<<r<<"  ";
+        }
+        //std::cout<<std::endl;
+        Nlines++;
       }
-      Nlines++;
       if(maxline) if(Nlines>=maxline) break;
     }
     if(maxline) if(Nlines<maxline) return static_cast<Basic>(1);
@@ -1139,17 +1151,20 @@ class FileReader
       char c = line[0];
       if( c==cd ) continue;
       std::istringstream getsub( line );
-      for(int i=0;i<Ncols_T;++i)
+      if(line.size())
       {
-        getsub>>r;
-        cols_T[i].push_back(r);
+        for(int i=0;i<Ncols_T;++i)
+        {
+          getsub>>r;
+          cols_T[i].push_back(r);
+        }
+        for(int i=0;i<Ncols_U;++i)
+        {
+          getsub>>s;
+          cols_U[i].push_back(s);
+        }
+        Nlines++;
       }
-      for(int i=0;i<Ncols_U;++i)
-      {
-        getsub>>s;
-        cols_U[i].push_back(s);
-      }
-      Nlines++;
       if(maxline) if(Nlines>=maxline) break;
     }
     if(maxline) if(Nlines<maxline) return static_cast<Basic>(1);
@@ -1222,9 +1237,12 @@ class FileReader
       char c = line[0];
       if( c==cd ) continue;
       std::istringstream getsub( line );
-      getsub>>r;
-      cols.push_back(r);
-      Nlines++;
+      if(line.size())
+      {
+        getsub>>r;
+        cols.push_back(r);
+        Nlines++;
+      }
       if(maxline) if(Nlines>=maxline) break;
     }
     if(maxline) if(Nlines<maxline) return static_cast<Basic>(1);
@@ -1307,6 +1325,7 @@ class FileReader
       char c = line[0];
       if( c==cd ) continue;
       std::istringstream getsub( line );
+      if(!line.size()) continue;
       if( file_ordered )
       {
         // Cette méthode range les colonnes dans l'ordre du fichier : +rapide
@@ -1415,6 +1434,7 @@ class FileReader
       if( (cline-From)<0 ){cline++; continue; } //Commence à lire quand cline = From (cline compté à partir de 0)
       if( (cline-From)%By != 0 ){cline++; continue; }
       std::istringstream getsub( line );
+      if(!line.size()) continue;
       if( file_ordered )
       {
         // Cette méthode range les colonnes dans l'ordre du fichier : +rapide
@@ -1529,6 +1549,7 @@ class FileReader
       if( (cline-From)<0 ){cline++; continue; } //Commence à lire quand cline = From (cline compté à partir de 0)
       if( (cline-From)%By != 0 ){cline++; continue; }
       std::istringstream getsub( line );
+      if(!line.size()) continue;
       if( file_ordered )
       {
         // Cette méthode range les colonnes dans l'ordre du fichier : +rapide
@@ -1641,7 +1662,7 @@ class FileReader
     bool tostop=false;
     std::string line;
     if(Ncols<1) return static_cast<Basic>(1);
-    if(mults.size()!=Ncols) return static_cast<Basic>(1);
+    if(mults.size()!=Sel_col.size()) return static_cast<Basic>(1);
     if(Sel_col.size() < 1) return static_cast<Basic>(1);
     VPredicate<T> StopPoint;
     for(unsigned int i=0;i<cols.size();++i) cols[i].clear(); cols.clear();
@@ -1661,6 +1682,7 @@ class FileReader
       if( (cline-From)<0 ){cline++; continue; } //Commence à lire quand cline = From (cline compté à partir de 0)
       if( (cline-From)%By != 0 ){cline++; continue; }
       std::istringstream getsub( line );
+      if(!line.size()) continue;
       if( file_ordered )
       {
         // Cette méthode range les colonnes dans l'ordre du fichier : +rapide
