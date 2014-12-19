@@ -220,7 +220,7 @@ static const std::string H3=std::string("DATASTRUCTURE");      //information sur
                   
 #include "Reader.hpp"
 
-#include "Writter.hpp"
+#include "Writer.hpp"
 
 
 #ifndef _FUNCTION_IO_TEMPL_
